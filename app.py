@@ -142,7 +142,7 @@ elif page == "Live Intrusion Detection":
             st.session_state.df_to_process = pd.read_csv(uploaded_file)
     with col2:
         st.markdown("#### Option B: Generate Simulation")
-        num_rows = st.slider("Number of packets to generate:", 500, 5000, 1500, key="slider")
+        num_rows = st.slider("Number of packets to generate:", 1, 900000, 1, key="slider")
         if st.button("Generate & Predict"):
             st.session_state.df_to_process = generate_random_data(num_rows)
     if st.session_state.df_to_process is not None:
@@ -237,4 +237,5 @@ elif page == "Optimization Algorithms Explored":
     st.markdown("Notice how **Adam** takes the most direct and efficient route to the minimum (located at `(0.0, 0.5)`), while **SGD** struggles and takes a noisy path. **Momentum** is better than SGD but can overshoot. This is why Adam is the default choice for most deep learning tasks.")
 
 # --- END OF NEW OPTIMIZATION ALGORITHMS PAGE ---
+
 
