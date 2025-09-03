@@ -226,8 +226,8 @@ def display_dashboard(df, model, model_name):
         st.error(f"An error occurred during prediction: {e}")
 
 # ----------------- PAGE SELECTION -----------------
-st.sidebar.title("🔬 Comparative Framework")
-page = st.sidebar.radio("Select a page", ["About the Project", "Model Performance Comparison", "Live Intrusion Detection"])
+st.sidebar.title("🔬 Project Framework")
+page = st.sidebar.radio("Select a page", ["About the Project", "Understanding Optimization", "Model Performance Comparison", "Live Intrusion Detection"])
 
 # --- START OF UPGRADED "ABOUT" PAGE ---
 if page == "About the Project":
@@ -341,3 +341,4 @@ elif page == "Live Intrusion Detection":
     if st.session_state.df_to_process is not None:
         display_dashboard(st.session_state.df_to_process, model_to_use, chosen_model_name)
 # --- END OF UPGRADED DETECTION PAGE ---
+
