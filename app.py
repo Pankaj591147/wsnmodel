@@ -59,7 +59,7 @@ models = {
     "Decision Tree": artifacts['dt_model'],
     "K-Nearest Neighbors": artifacts['knn_model'],
     "Logistic Regression": artifacts['lr_model']
-}K-Nearest Neighbors": artifacts['knn_model'], "Logistic Regression": artifacts['lr_model']}
+}
 
 # ----------------- NEW: DATA GENERATION FUNCTION -----------------
 def generate_random_data(num_rows, attack_ratio=0.4):
@@ -243,4 +243,5 @@ elif page == "Live Intrusion Detection":
     if st.session_state.df_to_process is not None:
         display_dashboard(st.session_state.df_to_process, model_to_use, chosen_model_name)
 # --- END OF UPGRADED DETECTION PAGE ---
+
 
