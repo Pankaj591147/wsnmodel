@@ -233,7 +233,7 @@ elif page == "Live Intrusion Detection":
             st.success("File uploaded! Results are below.")
     with col2:
         st.markdown("#### Option B: Generate a Simulation")
-        num_rows = st.slider("Select number of packets to generate:", 500, 50000, 1500, key="slider")
+        num_rows = st.slider("Select number of packets to generate:", 1, 9999999, 1, key="slider")
         if st.button("Generate & Predict"):
             with st.spinner('Generating simulated WSN traffic...'):
                 st.session_state.df_to_process = generate_random_data(num_rows)
@@ -243,6 +243,7 @@ elif page == "Live Intrusion Detection":
     if st.session_state.df_to_process is not None:
         display_dashboard(st.session_state.df_to_process, model_to_use, chosen_model_name)
 # --- END OF UPGRADED DETECTION PAGE ---
+
 
 
 
