@@ -101,105 +101,7 @@ def generate_random_data(num_rows, attack_ratio=0.4):
             df.loc[i, 'DATA_R'] = np.random.randint(2000, 4000)
             
     return df[expected_features] # Ensure column order is correct
-elif page == "Understanding Optimization":
-    st.title("🧠 How Do Models Learn? An Intro to Optimization")
-    st.markdown("""
-    At its core, "training" a machine learning model is a process of optimization. The goal is to find the best possible set of internal parameters (weights) for the model that minimizes its prediction errors. **Optimization Algorithms** are the engines that drive this process.
-    """)
 
-    st.header("The Hiker Analogy: Gradient Descent")
-    st.markdown("""
-    Imagine you are a hiker on a foggy mountain, and your goal is to reach the lowest point in the valley. This is exactly what an optimization algorithm does.
-    - **The Mountain:** Represents the "loss landscape." Higher points mean higher prediction error.
-    - **Your Position:** The current state of the model's parameters.
-    - **The Valley Floor:** The point of minimum error—the best possible model.
-    
-    Because of the fog, you can't see the whole mountain. So, you look at the ground beneath your feet to find the steepest downward slope (the **gradient**) and take a step. You repeat this process until you can no longer go downhill. The size of your step is called the **learning rate**.
-    """)
-
-    st.markdown("---")
-    st.header("Interactive Visualization: The Race to the Bottom")
-    st.markdown("Select different optimization algorithms below to see how they navigate the loss landscape to find the minimum. Observe the differences in their paths.")
-
-    # Create the 3D loss surface
-    x = np.linspace(-10, 10, 100)
-    y = np.linspace(-10, 10, 100)
-    X, Y = np.meshgrid(x, y)
-    Z = X**2 + Y**2 # A simple convex loss function
-    
-    surface = go.Surface(x=X, y=Y, z=Z, opacity=0.6, colorscale='viridis', showscale=False)
-    
-    # --- Simulate paths for different optimizers ---
-    def simulate_path(optimizer_type):
-        path_x, path_y = [-9], [9] # Starting point
-        velocity_x, velocity_y = 0, 0
-        m_x, m_y = 0, 0
-        v_x, v_y = 0, 0
-        beta1, beta2, eps = 0.9, 0.999, 1e-8
-        
-        for t in range(1, 20):
-            grad_x, grad_y = 2 * path_x[-1], 2 * path_y[-1]
-            
-            if optimizer_type == 'SGD':
-                learning_rate = 0.1
-                # Add noise to simulate stochastic nature
-                grad_x += np.random.randn() * 4
-                grad_y += np.random.randn() * 4
-                path_x.append(path_x[-1] - learning_rate * grad_x)
-                path_y.append(path_y[-1] - learning_rate * grad_y)
-            
-            elif optimizer_type == 'Momentum':
-                learning_rate, gamma = 0.1, 0.8
-                velocity_x = gamma * velocity_x + learning_rate * grad_x
-                velocity_y = gamma * velocity_y + learning_rate * grad_y
-                path_x.append(path_x[-1] - velocity_x)
-                path_y.append(path_y[-1] - velocity_y)
-                
-            elif optimizer_type == 'Adam':
-                learning_rate = 0.6
-                m_x = beta1 * m_x + (1 - beta1) * grad_x
-                m_y = beta1 * m_y + (1 - beta1) * grad_y
-                v_x = beta2 * v_x + (1 - beta2) * (grad_x**2)
-                v_y = beta2 * v_y + (1 - beta2) * (grad_y**2)
-                m_hat_x, m_hat_y = m_x / (1 - beta1**t), m_y / (1 - beta1**t)
-                v_hat_x, v_hat_y = v_x / (1 - beta2**t), v_y / (1 - beta2**t)
-                path_x.append(path_x[-1] - learning_rate * m_hat_x / (np.sqrt(v_hat_x) + eps))
-                path_y.append(path_y[-1] - learning_rate * m_hat_y / (np.sqrt(v_hat_y) + eps))
-                
-        path_z = np.array(path_x)**2 + np.array(path_y)**2
-        return path_x, path_y, path_z
-
-    # UI for selecting optimizers
-    optimizer_options = st.multiselect(
-        "Select algorithms to compare:",
-        ['SGD', 'Momentum', 'Adam'],
-        default=['SGD', 'Adam']
-    )
-
-    paths_to_plot = []
-    colors = {'SGD': '#e94560', 'Momentum': '#ff8c00', 'Adam': '#16c79a'}
-
-    for opt in optimizer_options:
-        px, py, pz = simulate_path(opt)
-        paths_to_plot.append(go.Scatter3d(x=px, y=py, z=pz, mode='lines+markers', 
-                                          name=opt, line=dict(color=colors[opt], width=8), 
-                                          marker=dict(size=5)))
-
-    fig = go.Figure(data=[surface] + paths_to_plot)
-    fig.update_layout(title='Optimization Paths on a Loss Surface', template='plotly_dark',
-                      scene=dict(xaxis_title='Weight 1', yaxis_title='Weight 2', zaxis_title='Loss (Error)'),
-                      legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01))
-    st.plotly_chart(fig, use_container_width=True)
-    
-    st.subheader("Interpreting the Paths")
-    if 'SGD' in optimizer_options:
-        st.markdown("- **Stochastic Gradient Descent (SGD):** The path is noisy and erratic. Because it looks at only one data point at a time, its direction is jumpy, but it still makes progress towards the minimum.")
-    if 'Momentum' in optimizer_options:
-        st.markdown("- **Momentum:** This path is much smoother. It builds up speed in the correct direction, helping it to overcome small bumps and converge faster than standard SGD.")
-    if 'Adam' in optimizer_options:
-        st.markdown("- **Adam (Adaptive Moment Estimation):** This is often the fastest and most direct path. It combines the idea of momentum with adaptive learning rates, allowing it to take confident, intelligent steps towards the goal. It is the default choice for most deep learning problems today.")
-
-# --- END OF NEW PAGE ---
 # ----------------- UNIFIED DASHBOARD DISPLAY FUNCTION -----------------
 def display_dashboard(df, model, model_name):
     """Processes a dataframe and displays the full analysis dashboard."""
@@ -226,8 +128,8 @@ def display_dashboard(df, model, model_name):
         st.error(f"An error occurred during prediction: {e}")
 
 # ----------------- PAGE SELECTION -----------------
-st.sidebar.title("🔬 Project Framework")
-page = st.sidebar.radio("Select a page", ["About the Project", "Understanding Optimization", "Model Performance Comparison", "Live Intrusion Detection"])
+st.sidebar.title("🔬 Comparative Framework")
+page = st.sidebar.radio("Select a page", ["About the Project", "Model Performance Comparison", "Live Intrusion Detection"])
 
 # --- START OF UPGRADED "ABOUT" PAGE ---
 if page == "About the Project":
@@ -341,4 +243,3 @@ elif page == "Live Intrusion Detection":
     if st.session_state.df_to_process is not None:
         display_dashboard(st.session_state.df_to_process, model_to_use, chosen_model_name)
 # --- END OF UPGRADED DETECTION PAGE ---
-
