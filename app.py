@@ -157,4 +157,70 @@ elif page == "Optimization Algorithms Explored":
     # --- 2. Gradient Descent Simulation ---
     st.markdown("---")
     st.header("2. Interactive Gradient Descent")
-    st.markdown("The most fundamental optimizer is **Gradient Descent**. It's like a hiker in a foggy
+    st.markdown("The most fundamental optimizer is **Gradient Descent**. It's like a hiker in a foggy valley who can only see the ground at their feet. They find the steepest downward slope (the **gradient**) and take a step. The size of that step is the **learning rate**.")
+    
+    col1, col2 = st.columns([0.7, 0.3])
+    with col2:
+        st.subheader("Controls")
+        start_x = st.slider("Start Position (X)", -4.5, 4.5, 4.0, 0.5)
+        learning_rate = st.slider("Learning Rate (α)", 0.01, 1.0, 0.1, 0.01)
+        num_steps = st.slider("Number of Steps", 5, 50, 10, 1)
+
+    # Gradient descent calculation
+    path_x, path_y, path_z = [start_x], [0.0], [start_x**2]
+    current_x = start_x
+    for _ in range(num_steps):
+        gradient = 2 * current_x  # Derivative of x^2 is 2x
+        current_x = current_x - learning_rate * gradient
+        path_x.append(current_x)
+        path_y.append(0.0) # Keep it on one axis for simplicity
+        path_z.append(current_x**2)
+    
+    with col1:
+        fig_gd = go.Figure()
+        # Loss curve
+        fig_gd.add_trace(go.Scatter(x=x, y=x**2, mode='lines', name='Loss Function (y = x^2)'))
+        # Steps
+        fig_gd.add_trace(go.Scatter(x=path_x, y=path_z, mode='markers+lines', name='Optimizer Path', marker=dict(size=10, color='red')))
+        fig_gd.update_layout(title=f"Finding the Minimum with Learning Rate: {learning_rate}", xaxis_title="Parameter Value", yaxis_title="Loss (Error)", template='plotly_dark')
+        st.plotly_chart(fig_gd, use_container_width=True)
+
+    st.markdown("""
+    **Experiment!**
+    - **High Learning Rate (e.g., > 0.9):** Notice how the optimizer overshoots the minimum and bounces around wildly.
+    - **Low Learning Rate (e.g., < 0.1):** The optimizer takes tiny, slow steps. It's reliable but might take too long to converge.
+    - **Good Learning Rate (e.g., ~0.3):** The optimizer finds the minimum efficiently.
+    """)
+
+    # --- 3. Advanced Optimizers ---
+    st.markdown("---")
+    st.header("3. Advanced Optimizers: The Smart Hikers")
+    st.markdown("Modern optimizers improve upon Gradient Descent. **Adam** is the most popular because it's like a smart hiker with momentum and adaptive step sizes, allowing it to navigate complex landscapes much faster.")
+    
+    # Create a complex landscape (Beale function)
+    def beale_function(x, y):
+        return (1.5 - x + x*y)**2 + (2.25 - x + x*y**2)**2 + (2.625 - x + x*y**3)**2
+
+    x_b = np.linspace(-4.5, 4.5, 250)
+    y_b = np.linspace(-4.5, 4.5, 250)
+    X_b, Y_b = np.meshgrid(x_b, y_b)
+    Z_b = beale_function(X_b, Y_b)
+
+    # Simplified paths for visualization
+    paths = {
+        'SGD': [(3.5, 3.5), (3.0, 3.2), (2.8, 2.5), (2.2, 2.3), (1.8, 2.0), (1.5, 1.8), (1.0, 1.5), (0.7, 1.2), (0.4, 0.9), (0.2, 0.7), (0.1, 0.6), (0.0, 0.5)],
+        'Momentum': [(3.5, 3.5), (3.1, 3.1), (2.5, 2.5), (1.8, 1.8), (0.9, 0.9), (0.2, 0.6), (-0.1, 0.5), (0.0, 0.5)],
+        'Adam': [(3.5, 3.5), (3.2, 3.0), (2.8, 2.2), (2.0, 1.5), (1.0, 0.8), (0.3, 0.6), (0.0, 0.5)]
+    }
+
+    fig_adv = go.Figure()
+    fig_adv.add_trace(go.Contour(z=Z_b, x=x_b, y=y_b, colorscale='gray', showscale=False))
+    
+    for name, path in paths.items():
+        fig_adv.add_trace(go.Scatter(x=[p[0] for p in path], y=[p[1] for p in path], mode='lines+markers', name=name))
+    
+    fig_adv.update_layout(title="Visualizing Optimizer Paths on a Complex Surface", xaxis_title="Parameter 1", yaxis_title="Parameter 2", template='plotly_dark', height=600)
+    st.plotly_chart(fig_adv, use_container_width=True)
+    st.markdown("Notice how **Adam** takes the most direct and efficient route to the minimum (located at `(0.0, 0.5)`), while **SGD** struggles and takes a noisy path. **Momentum** is better than SGD but can overshoot. This is why Adam is the default choice for most deep learning tasks.")
+
+# --- END OF NEW OPTIMIZATION ALGORITHMS PAGE ---
