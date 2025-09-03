@@ -105,4 +105,8 @@ elif page == "Live Intrusion Detection":
             df_with_predictions = df_test.copy()
             df_with_predictions['Prediction'] = [attack_labels.get(p, 'Unknown') for p in predictions]
             
-            st.header(f"Analysis Dashboard (using {chosen_model_name})
+            st.header(f"Analysis Dashboard (using {chosen_model_name})")
+            st.dataframe(df_with_predictions)
+            
+        except Exception as e:
+            st.error(f"An error occurred during prediction: {e}")
