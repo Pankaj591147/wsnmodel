@@ -19,7 +19,7 @@ st.markdown("""
 
 # ----------------- MASTER DATA LOADING FUNCTION (CORRECTED) -----------------
 @st.cache_resource
-def load_artifacts_from_zip(zip_path='artifacts.zip/artifacts.zip'):
+def load_artifacts_from_zip(zip_path='artifacts1.zip/artifacts.zip'):
     """Loads all necessary .joblib files from a nested folder within a single zip archive."""
     artifacts = {}
     # --- START OF CORRECTION ---
@@ -109,4 +109,5 @@ elif page == "Live Intrusion Detection":
             
         except Exception as e:
             st.error(f"An error occurred during prediction: {e}")
+
 
