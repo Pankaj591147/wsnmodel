@@ -23,8 +23,8 @@ def load_artifacts_from_zip(zip_path='artifacts.zip'):
     """Loads all necessary .joblib files from a nested folder within a single zip archive."""
     artifacts = {}
     # --- START OF CORRECTION ---
-    # Define the path to the files INSIDE the zip archive
-    nested_path = 'artifacts/'
+    # Define the path to the files INSIDE the zip archive, including the nested folder
+    nested_path = 'artifacts.zip/'
     # --- END OF CORRECTION ---
     try:
         with zipfile.ZipFile(zip_path, 'r') as z:
@@ -45,7 +45,7 @@ def load_artifacts_from_zip(zip_path='artifacts.zip'):
                     artifacts[key] = joblib.load(f)
         return artifacts
     except Exception as e:
-        st.error(f"Fatal Error: Could not load artifacts from '{zip_path}'. Ensure the file and its nested structure are correct. Error: {e}")
+        st.error(f"Fatal Error: Could not load artifacts from '{zip_path}'. Ensure the file and its nested structure ('{nested_path}') are correct. Error: {e}")
         st.stop()
 
 # Load everything in one go
