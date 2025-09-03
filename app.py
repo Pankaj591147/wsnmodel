@@ -17,26 +17,35 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ----------------- MASTER DATA LOADING FUNCTION -----------------
+# ----------------- MASTER DATA LOADING FUNCTION (CORRECTED) -----------------
 @st.cache_resource
 def load_artifacts_from_zip(zip_path='artifacts.zip'):
-    """Loads all necessary .joblib files from a single zip archive."""
+    """Loads all necessary .joblib files from a nested folder within a single zip archive."""
     artifacts = {}
+    # --- START OF CORRECTION ---
+    # Define the path to the files INSIDE the zip archive
+    nested_path = 'artifacts/'
+    # --- END OF CORRECTION ---
     try:
         with zipfile.ZipFile(zip_path, 'r') as z:
-            # List of all files to load from the zip
+            # List of the base filenames to load
             files_to_load = [
                 'scaler.joblib', 'feature_names.joblib', 'dt_model.joblib', 
                 'rf_model.joblib', 'lr_model.joblib', 'knn_model.joblib', 'xgb_model.joblib'
             ]
-            for file_in_zip in files_to_load:
-                with z.open(file_in_zip) as f:
-                    # Store the loaded object in the dictionary
-                    key = file_in_zip.replace('.joblib', '')
+            for base_filename in files_to_load:
+                # --- START OF CORRECTION ---
+                # Construct the full path to the file within the zip
+                full_path_in_zip = nested_path + base_filename
+                # --- END OF CORRECTION ---
+                
+                with z.open(full_path_in_zip) as f:
+                    # The key should be the base filename without the extension
+                    key = base_filename.replace('.joblib', '')
                     artifacts[key] = joblib.load(f)
         return artifacts
     except Exception as e:
-        st.error(f"Fatal Error: Could not load artifacts from '{zip_path}'. Ensure the file is in the repository. Error: {e}")
+        st.error(f"Fatal Error: Could not load artifacts from '{zip_path}'. Ensure the file and its nested structure are correct. Error: {e}")
         st.stop()
 
 # Load everything in one go
@@ -51,7 +60,7 @@ models = {
     "Logistic Regression": artifacts['lr_model']
 }
 
-# ----------------- UI & APP LOGIC -----------------
+# ----------------- UI & APP LOGIC (Remains the same) -----------------
 st.sidebar.title("🔬 Comparative Framework")
 page = st.sidebar.radio("Select a page", ["Model Performance Comparison", "Live Intrusion Detection", "About"])
 
@@ -80,7 +89,8 @@ elif page == "Live Intrusion Detection":
         df_test = pd.read_csv(uploaded_file)
         try:
             df_display = df_test.copy()
-            # Drop the ' id' column from the uploaded data, if it exists
+            
+            # Drop the ' id' column (with space) from the uploaded data, if it exists
             if ' id' in df_display.columns:
                 df_display = df_display.drop(' id', axis=1)
 
@@ -88,8 +98,13 @@ elif page == "Live Intrusion Detection":
             X_test_scaled = scaler.transform(X_test)
             predictions = model.predict(X_test_scaled)
             attack_labels = {3: 'Normal Traffic', 0: 'Blackhole Attack', 1: 'Flooding Attack', 2: 'Grayhole Attack', 4: 'Scheduling Attack'}
-            df_display['Prediction'] = [attack_labels.get(p, 'Unknown') for p in predictions]
+            
+            # Add prediction column back for display
+            df_with_predictions = df_test.copy()
+            df_with_predictions['Prediction'] = [attack_labels.get(p, 'Unknown') for p in predictions]
+            
             st.header(f"Analysis Dashboard (using {chosen_model_name})")
-            st.dataframe(df_display)
+            st.dataframe(df_with_predictions)
+            
         except Exception as e:
             st.error(f"An error occurred during prediction: {e}")
