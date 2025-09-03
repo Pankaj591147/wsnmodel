@@ -25,27 +25,41 @@ st.markdown("""
 
 # ----------------- MASTER DATA LOADING (UNCHANGED) -----------------
 @st.cache_resource
-def load_artifacts_from_zip(zip_path='artifacts.zip'):
-    """Loads all necessary .joblib files from a nested 'artifacts' folder within a zip archive."""
+def load_artifacts_from_double_zip(outer_zip_path='artifacts.zip'):
+    """
+    Loads all necessary .joblib files from a zip file that is nested inside another zip file.
+    Structure: outer_zip -> inner_zip -> .joblib files
+    """
     artifacts = {}
-    nested_folder = 'artifacts/'
+    inner_zip_name = 'artifacts.zip'  # The name of the zip file inside the outer zip
     try:
-        with zipfile.ZipFile(zip_path, 'r') as z:
-            files_to_load = ['scaler.joblib', 'feature_names.joblib', 'dt_model.joblib', 'rf_model.joblib', 'lr_model.joblib', 'knn_model.joblib', 'xgb_model.joblib']
-            for file_in_zip in files_to_load:
-                full_path = nested_folder + file_in_zip
-                with z.open(full_path) as f:
-                    key = file_in_zip.replace('.joblib', '')
-                    artifacts[key] = joblib.load(f)
+        with zipfile.ZipFile(outer_zip_path, 'r') as outer_z:
+            inner_zip_bytes = outer_z.read(inner_zip_name)
+            with zipfile.ZipFile(io.BytesIO(inner_zip_bytes), 'r') as inner_z:
+                files_to_load = [
+                    'scaler.joblib', 'feature_names.joblib', 'dt_model.joblib', 
+                    'rf_model.joblib', 'lr_model.joblib', 'knn_model.joblib', 'xgb_model.joblib'
+                ]
+                for file_in_zip in files_to_load:
+                    with inner_z.open(file_in_zip) as f:
+                        key = file_in_zip.replace('.joblib', '')
+                        artifacts[key] = joblib.load(f)
         return artifacts
     except Exception as e:
-        st.error(f"Fatal Error: Could not load artifacts from '{zip_path}'. Ensure it contains a folder named 'artifacts' with all .joblib files. Error: {e}")
+        st.error(f"Fatal Error: Could not load artifacts from the nested zip file. Ensure 'artifacts.zip' contains another 'artifacts.zip' with the model files. Error: {e}")
         st.stop()
 
-artifacts = load_artifacts_from_zip()
+# Load everything in one go
+artifacts = load_artifacts_from_double_zip()
 scaler = artifacts['scaler']
 expected_features = artifacts['feature_names']
-models = { "XGBoost": artifacts['xgb_model'], "Random Forest": artifacts['rf_model'], "Decision Tree": artifacts['dt_model'], "K-Nearest Neighbors": artifacts['knn_model'], "Logistic Regression": artifacts['lr_model']}
+models = {
+    "XGBoost": artifacts['xgb_model'],
+    "Random Forest": artifacts['rf_model'],
+    "Decision Tree": artifacts['dt_model'],
+    "K-Nearest Neighbors": artifacts['knn_model'],
+    "Logistic Regression": artifacts['lr_model']
+}K-Nearest Neighbors": artifacts['knn_model'], "Logistic Regression": artifacts['lr_model']}
 
 # ----------------- NEW: DATA GENERATION FUNCTION -----------------
 def generate_random_data(num_rows, attack_ratio=0.4):
@@ -229,3 +243,4 @@ elif page == "Live Intrusion Detection":
     if st.session_state.df_to_process is not None:
         display_dashboard(st.session_state.df_to_process, model_to_use, chosen_model_name)
 # --- END OF UPGRADED DETECTION PAGE ---
+
