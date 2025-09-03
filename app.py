@@ -17,40 +17,43 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ----------------- MASTER DATA LOADING FUNCTION (CORRECTED) -----------------
+# ----------------- MASTER DATA LOADING FUNCTION (UPGRADED FOR DOUBLE ZIP) -----------------
 @st.cache_resource
-def load_artifacts_from_zip(zip_path='artifacts1.zip/artifacts.zip'):
-    """Loads all necessary .joblib files from a nested folder within a single zip archive."""
+def load_artifacts_from_double_zip(outer_zip_path='artifacts.zip'):
+    """
+    Loads all necessary .joblib files from a zip file that is nested inside another zip file.
+    Structure: outer_zip -> inner_zip -> .joblib files
+    """
     artifacts = {}
-    # --- START OF CORRECTION ---
-    # Define the path to the files INSIDE the zip archive, including the nested folder.
-    # This must match the folder name inside your main zip file.
-    nested_path = 'artifacts.zip/'
-    # --- END OF CORRECTION ---
+    inner_zip_name = 'artifacts.zip'  # The name of the zip file inside the outer zip
+
     try:
-        with zipfile.ZipFile(zip_path, 'r') as z:
-            # List of the base filenames to load
-            files_to_load = [
-                'scaler.joblib', 'feature_names.joblib', 'dt_model.joblib', 
-                'rf_model.joblib', 'lr_model.joblib', 'knn_model.joblib', 'xgb_model.joblib'
-            ]
-            for base_filename in files_to_load:
-                # --- START OF CORRECTION ---
-                # Construct the full path to the file within the zip archive
-                full_path_in_zip = nested_path + base_filename
-                # --- END OF CORRECTION ---
+        # 1. Open the outer zip file from the repository
+        with zipfile.ZipFile(outer_zip_path, 'r') as outer_z:
+            
+            # 2. Read the inner zip file into memory as bytes
+            inner_zip_bytes = outer_z.read(inner_zip_name)
+            
+            # 3. Use io.BytesIO to treat the in-memory bytes as a file, and open it as a zip archive
+            with zipfile.ZipFile(io.BytesIO(inner_zip_bytes), 'r') as inner_z:
                 
-                with z.open(full_path_in_zip) as f:
-                    # The key should be the base filename without the extension
-                    key = base_filename.replace('.joblib', '')
-                    artifacts[key] = joblib.load(f)
+                # 4. Now, load all the .joblib files from the inner zip archive
+                files_to_load = [
+                    'scaler.joblib', 'feature_names.joblib', 'dt_model.joblib', 
+                    'rf_model.joblib', 'lr_model.joblib', 'knn_model.joblib', 'xgb_model.joblib'
+                ]
+                for file_in_zip in files_to_load:
+                    with inner_z.open(file_in_zip) as f:
+                        key = file_in_zip.replace('.joblib', '')
+                        artifacts[key] = joblib.load(f)
         return artifacts
+        
     except Exception as e:
-        st.error(f"Fatal Error: Could not load artifacts from '{zip_path}'. Ensure the file and its nested structure ('{nested_path}') are correct. Error: {e}")
+        st.error(f"Fatal Error: Could not load artifacts from the nested zip file structure. Please ensure 'artifacts.zip' contains another 'artifacts.zip' with the model files. Error: {e}")
         st.stop()
 
-# Load everything in one go
-artifacts = load_artifacts_from_zip()
+# Load everything in one go using the new function
+artifacts = load_artifacts_from_double_zip()
 scaler = artifacts['scaler']
 expected_features = artifacts['feature_names']
 models = {
@@ -91,7 +94,6 @@ elif page == "Live Intrusion Detection":
         try:
             df_display = df_test.copy()
             
-            # Drop the ' id' column (with space) from the uploaded data, if it exists
             if ' id' in df_display.columns:
                 df_display = df_display.drop(' id', axis=1)
 
@@ -100,14 +102,7 @@ elif page == "Live Intrusion Detection":
             predictions = model.predict(X_test_scaled)
             attack_labels = {3: 'Normal Traffic', 0: 'Blackhole Attack', 1: 'Flooding Attack', 2: 'Grayhole Attack', 4: 'Scheduling Attack'}
             
-            # Add prediction column back for display
             df_with_predictions = df_test.copy()
             df_with_predictions['Prediction'] = [attack_labels.get(p, 'Unknown') for p in predictions]
             
-            st.header(f"Analysis Dashboard (using {chosen_model_name})")
-            st.dataframe(df_with_predictions)
-            
-        except Exception as e:
-            st.error(f"An error occurred during prediction: {e}")
-
-
+            st.header(f"Analysis Dashboard (using {chosen_model_name})
