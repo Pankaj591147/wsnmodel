@@ -12,12 +12,14 @@ st.markdown("""
 <style>
     .stApp { background-color: #1a1a2e; color: #e0e0e0; }
     .css-1d391kg { background-color: #16213e; }
-    .stMetric { background-color: #0f3460; border-radius: 10px; padding: 15px; }
-    .stMetric > label { color: #a0a0a0; } .stMetric > div { color: #e94560; }
+    .stMetric { background-color: #0f3460; border-radius: 10px; padding: 15px; text-align: center; }
+    .stMetric > label { color: #a0a0a0; } 
+    .stMetric > div { color: #e94560; font-size: 1.75rem; }
+    .stDataFrame { border-radius: 10px; overflow: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
-# ----------------- MASTER DATA LOADING FUNCTION (UPGRADED FOR DOUBLE ZIP) -----------------
+# ----------------- MASTER DATA LOADING FUNCTION -----------------
 @st.cache_resource
 def load_artifacts_from_double_zip(outer_zip_path='artifacts.zip'):
     """
@@ -26,18 +28,10 @@ def load_artifacts_from_double_zip(outer_zip_path='artifacts.zip'):
     """
     artifacts = {}
     inner_zip_name = 'artifacts.zip'  # The name of the zip file inside the outer zip
-
     try:
-        # 1. Open the outer zip file from the repository
         with zipfile.ZipFile(outer_zip_path, 'r') as outer_z:
-            
-            # 2. Read the inner zip file into memory as bytes
             inner_zip_bytes = outer_z.read(inner_zip_name)
-            
-            # 3. Use io.BytesIO to treat the in-memory bytes as a file, and open it as a zip archive
             with zipfile.ZipFile(io.BytesIO(inner_zip_bytes), 'r') as inner_z:
-                
-                # 4. Now, load all the .joblib files from the inner zip archive
                 files_to_load = [
                     'scaler.joblib', 'feature_names.joblib', 'dt_model.joblib', 
                     'rf_model.joblib', 'lr_model.joblib', 'knn_model.joblib', 'xgb_model.joblib'
@@ -47,12 +41,11 @@ def load_artifacts_from_double_zip(outer_zip_path='artifacts.zip'):
                         key = file_in_zip.replace('.joblib', '')
                         artifacts[key] = joblib.load(f)
         return artifacts
-        
     except Exception as e:
-        st.error(f"Fatal Error: Could not load artifacts from the nested zip file structure. Please ensure 'artifacts.zip' contains another 'artifacts.zip' with the model files. Error: {e}")
+        st.error(f"Fatal Error: Could not load artifacts from the nested zip file. Ensure 'artifacts.zip' contains another 'artifacts.zip' with the model files. Error: {e}")
         st.stop()
 
-# Load everything in one go using the new function
+# Load everything in one go
 artifacts = load_artifacts_from_double_zip()
 scaler = artifacts['scaler']
 expected_features = artifacts['feature_names']
@@ -64,7 +57,7 @@ models = {
     "Logistic Regression": artifacts['lr_model']
 }
 
-# ----------------- UI & APP LOGIC (Remains the same) -----------------
+# ----------------- UI & APP LOGIC -----------------
 st.sidebar.title("🔬 Comparative Framework")
 page = st.sidebar.radio("Select a page", ["Model Performance Comparison", "Live Intrusion Detection", "About"])
 
@@ -81,32 +74,22 @@ elif page == "Model Performance Comparison":
                         'Accuracy': [0.9997, 0.9995, 0.9985, 0.9971, 0.9850],
                         'F1-Score': [0.9997, 0.9995, 0.9985, 0.9971, 0.9850]}
     df_perf = pd.DataFrame(performance_data)
-    st.dataframe(df_perf.set_index('Model'))
-    st.markdown("The results show that **XGBoost** and **Random Forest** are the top-performing classifiers.")
+    
+    st.markdown("---")
+    st.header("Overall Performance Metrics")
+    fig = px.bar(df_perf.sort_values('F1-Score', ascending=True), 
+                 x='F1-Score', y='Model', orientation='h',
+                 title="Model F1-Scores (Higher is Better)",
+                 template='plotly_dark', text='F1-Score')
+    fig.update_traces(texttemplate='%{text:.4f}', textposition='outside')
+    fig.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
+    st.plotly_chart(fig, use_container_width=True)
 
-elif page == "Live Intrusion Detection":
-    st.title("🕵️ Live Network Traffic Analysis")
-    chosen_model_name = st.selectbox("Choose a Model for Prediction", list(models.keys()))
-    model = models[chosen_model_name]
-    uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-    if uploaded_file:
-        df_test = pd.read_csv(uploaded_file)
-        try:
-            df_display = df_test.copy()
-            
-            if ' id' in df_display.columns:
-                df_display = df_display.drop(' id', axis=1)
+    st.markdown("### Key Insights")
+    st.markdown("""
+    - **Top Performers:** The **XGBoost** and **Random Forest** models are the clear winners, achieving near-perfect F1-Scores. This is expected as both are powerful ensemble methods well-suited for complex, tabular data.
+    - **Best Overall Model:** **XGBoost** is recommended as the optimal model. Its gradient boosting algorithm, which learns from the errors of previous trees, gives it a slight edge in performance and makes it a state-of-the-art choice for this type of security application.
+    """)
 
-            X_test = df_display[expected_features]
-            X_test_scaled = scaler.transform(X_test)
-            predictions = model.predict(X_test_scaled)
-            attack_labels = {3: 'Normal Traffic', 0: 'Blackhole Attack', 1: 'Flooding Attack', 2: 'Grayhole Attack', 4: 'Scheduling Attack'}
-            
-            df_with_predictions = df_test.copy()
-            df_with_predictions['Prediction'] = [attack_labels.get(p, 'Unknown') for p in predictions]
-            
-            st.header(f"Analysis Dashboard (using {chosen_model_name})")
-            st.dataframe(df_with_predictions)
-            
-        except Exception as e:
-            st.error(f"An error occurred during prediction: {e}")
+
+elif page == "
