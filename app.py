@@ -103,8 +103,8 @@ page = st.sidebar.radio("Select a page", ["About the Project", "Model Performanc
 
 # --- ABOUT & MODEL COMPARISON PAGES (UNCHANGED) ---
 if page == "About the Project":
-    st.title("🛡️ About The WSN Intrusion Detection Project")
-    st.markdown("This project presents a complete framework for identifying cyber attacks in Wireless Sensor Networks (WSNs) using a comparative machine learning approach.")
+    st.markdown("This project presents a complete, end-to-end framework for identifying cyber attacks in Wireless Sensor Networks (WSNs). It addresses the critical need for intelligent security in resource-constrained IoT environments by leveraging a comparative machine learning approach to find the most effective and efficient defense mechanism.")
+
     st.graphviz_chart('''
         digraph {
             graph [rankdir="LR", bgcolor="#1a1a2e", fontcolor="white"];
@@ -117,6 +117,43 @@ if page == "About the Project":
             Data -> Preprocess -> Train -> App;
         }
     ''')
+
+    st.markdown("---")
+
+    st.header("🎯 Project Objectives")
+    st.markdown("""
+    - **Simulate and Analyze:** To understand and simulate various network attack patterns specific to WSNs, such as Blackhole, Flooding, and Scheduling attacks.
+    - **Implement and Compare:** To implement a diverse set of machine learning classifiers and systematically evaluate their performance in detecting intrusions.
+    - **Identify Key Predictors:** To determine which network features are the most powerful indicators of an attack, providing deep insight into *why* the models work.
+    - **Deploy a Solution:** To create a fully functional, interactive web application that serves as a tool for live intrusion detection and analysis, making the project's findings accessible and usable.
+    """)
+
+    st.markdown("---")
+
+    st.header("✨ What Makes This Project Unique?")
+    st.markdown("""
+    This project stands out from standard implementations due to its comprehensive, research-oriented approach and focus on delivering a practical, end-to-end solution.
+
+    - **Rigorous Comparative Framework:**
+        - Instead of relying on a single algorithm, this project systematically evaluates **five distinct and powerful classifiers** from different algorithmic families (e.g., ensemble, linear, instance-based).
+        - This comparative analysis provides a scientifically valid, evidence-based conclusion on which model architecture is genuinely superior for this specific security task.
+
+    - **Inclusion of State-of-the-Art Models:**
+        - The framework includes **XGBoost (Extreme Gradient Boosting)**, which is widely regarded as the industry-standard and often the top-performing algorithm for structured data competitions and real-world applications.
+        - This demonstrates an application of cutting-edge, industry-relevant technology as required by modern engineering standards.
+
+    - **Focus on a Realistic, Specialized Dataset:**
+        - The models are trained and validated on the **WSN-DS dataset**, which was generated from realistic network simulations (NS-2).
+        - This ensures the results are highly relevant and credible, as the models learn from data that accurately mirrors real-world network behaviors and attack signatures, unlike generic datasets.
+
+    - **Complete End-to-End Deployed Solution:**
+        - The project doesn't stop at a Jupyter notebook. It delivers a **fully functional, deployed web application** hosted on Streamlit Community Cloud.
+        - This demonstrates the complete project lifecycle—from data analysis and model training to deployment and user interface design—fulfilling the requirement for a tangible, usable outcome.
+
+    - **Built-in Educational Framework:**
+        - The application includes dedicated, interactive pages that explain the core theoretical concepts behind the models, such as **Optimization Algorithms**.
+        - This elevates the project from a simple tool to an educational platform, showcasing a deep and comprehensive understanding of the underlying principles of machine learning.
+    """)
 elif page == "Model Performance Comparison":
     st.title("📊 Model Performance Showdown")
     performance_data = {'Model': ['XGBoost', 'Random Forest', 'Decision Tree', 'K-Nearest Neighbors', 'Logistic Regression'], 'F1-Score': [0.9997, 0.9995, 0.9985, 0.9971, 0.9850]}
@@ -237,5 +274,6 @@ elif page == "Optimization Algorithms Explored":
     st.markdown("Notice how **Adam** takes the most direct and efficient route to the minimum (located at `(0.0, 0.5)`), while **SGD** struggles and takes a noisy path. **Momentum** is better than SGD but can overshoot. This is why Adam is the default choice for most deep learning tasks.")
 
 # --- END OF NEW OPTIMIZATION ALGORITHMS PAGE ---
+
 
 
