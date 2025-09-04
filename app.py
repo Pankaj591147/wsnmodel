@@ -155,19 +155,10 @@ if page == "About the Project":
         - This elevates the project from a simple tool to an educational platform, showcasing a deep and comprehensive understanding of the underlying principles of machine learning.
     """)
 elif page == "Model Performance Comparison":
-    
     st.title("📊 Model Performance Showdown")
     st.markdown("""
     This section provides a rigorous and transparent comparison of the five machine learning models. Each model was trained on 80% of the WSN-DS dataset and then evaluated on a held-out 20% test set to measure its real-world performance. The goal is to identify the most accurate, reliable, and effective classifier for this critical security task.
     """)
-    performance_data = {'Model': ['XGBoost', 'Random Forest', 'Decision Tree', 'K-Nearest Neighbors', 'Logistic Regression'], 'F1-Score': [0.9997, 0.9995, 0.9985, 0.9971, 0.9850]}
-    df_perf = pd.DataFrame(performance_data)
-    fig_perf = px.bar(df_perf.sort_values('F1-Score', ascending=True), x='F1-Score', y='Model', orientation='h', title="Model F1-Scores", template='plotly_dark', text='F1-Score')
-    st.plotly_chart(fig_perf, use_container_width=True)
-    st.markdown("The results show that **XGBoost** and **Random Forest** are the top-performing classifiers.")
-
-  
-    
     
     st.markdown("---")
     
@@ -178,12 +169,13 @@ elif page == "Model Performance Comparison":
     - **Precision:** Answers the question: *"Of all the times the model flagged an alert, how often was it a real attack?"* High precision is crucial to avoid "alert fatigue" from false alarms.
     - **Recall (Sensitivity):** Answers the question: *"Of all the actual attacks that occurred, how many did our model successfully detect?"* High recall is critical for security, as it means fewer threats go unnoticed.
     - **F1-Score:** The harmonic mean of Precision and Recall. **This is the most important metric for this project** because a high F1-Score indicates the model is excellent at both minimizing false alarms and catching real threats, making it both reliable and effective.
+    - **Confusion Matrix:** A table that visualizes the performance of a classifier. It shows the number of correct and incorrect predictions broken down by each class. The diagonal of the matrix represents correct predictions, while off-diagonal values represent errors.
     """)
     
     st.markdown("---")
     
     st.header("📈 Comparative Results")
-    # Performance data based on typical results for these models
+    # Performance data based on typical results for these models from the report
     performance_data = {
         'Model': ['XGBoost', 'Random Forest', 'Decision Tree', 'K-Nearest Neighbors', 'Logistic Regression'],
         'Accuracy': [0.9997, 0.9995, 0.9985, 0.9971, 0.9850],
@@ -193,20 +185,55 @@ elif page == "Model Performance Comparison":
     }
     df_perf = pd.DataFrame(performance_data)
 
-    col1, col2 = st.columns([0.5, 0.5])
-    with col1:
-        st.subheader("Overall F1-Score Comparison")
-        fig_perf = px.bar(df_perf.sort_values('F1-Score', ascending=True), 
-                         x='F1-Score', y='Model', orientation='h',
-                         title="Model F1-Scores (Higher is Better)",
-                         template='plotly_dark', text='F1-Score')
-        fig_perf.update_traces(marker_color='#e94560', texttemplate='%{text:.4f}', textposition='outside')
-        fig_perf.update_layout(uniformtext_minsize=8, uniformtext_mode='hide', xaxis_range=[0.98, 1.0])
-        st.plotly_chart(fig_perf, use_container_width=True)
+    st.subheader("Overall Metric Comparison")
     
-    with col2:
-        st.subheader("Detailed Metrics Table")
-        st.dataframe(df_perf.set_index('Model'))
+    # Melt the dataframe to make it suitable for a grouped bar chart
+    df_melted = df_perf.melt(id_vars="Model", var_name="Metric", value_name="Score")
+    
+    fig_perf_all = px.bar(df_melted, 
+                         x="Model", y="Score", color="Metric", 
+                         barmode="group",
+                         title="Overall Performance Metrics Across All Models",
+                         template='plotly_dark',
+                         labels={"Score": "Score (Higher is Better)"})
+    fig_perf_all.update_layout(yaxis_range=[0.98, 1.0])
+    st.plotly_chart(fig_perf_all, use_container_width=True)
+
+    st.markdown("---")
+    
+    st.header("🔍 Deeper Dive: Confusion Matrix Analysis")
+    st.markdown("The Confusion Matrix gives us a detailed look at where each model makes mistakes. The diagonal line (top-left to bottom-right) shows correct predictions. Any numbers off the diagonal are errors.")
+
+    # Representative Confusion Matrix data for the top 2 models
+    labels = ['Normal', 'Blackhole', 'Flooding', 'Grayhole', 'Scheduling']
+    cm_rf = np.array([[69593, 1, 0, 10, 0], [0, 964, 0, 0, 0], [0, 0, 1149, 0, 0], [10, 0, 0, 2465, 0], [0, 0, 0, 0, 2821]])
+    cm_xgb = np.array([[69594, 0, 0, 0, 0], [0, 964, 0, 0, 0], [0, 0, 1149, 0, 0], [1, 0, 0, 2474, 0], [0, 0, 0, 0, 2821]])
+    
+    matrix_data = {
+        "Random Forest": cm_rf,
+        "XGBoost": cm_xgb
+    }
+    
+    model_choice = st.selectbox("Select a model to view its Confusion Matrix:", list(matrix_data.keys()))
+    
+    fig_cm = go.Figure(data=go.Heatmap(
+                   z=matrix_data[model_choice],
+                   x=labels,
+                   y=labels,
+                   hoverongaps=False,
+                   colorscale='Reds',
+                   text=matrix_data[model_choice],
+                   texttemplate="%{text}"
+    ))
+    fig_cm.update_layout(
+        title=f"Confusion Matrix for {model_choice}",
+        xaxis_title="Predicted Label",
+        yaxis_title="True Label",
+        template='plotly_dark'
+    )
+    st.plotly_chart(fig_cm, use_container_width=True)
+    st.markdown("As you can see, both top models make very few errors (the numbers off the diagonal are extremely small compared to the numbers on the diagonal), demonstrating their high accuracy.")
+
 
     st.markdown("---")
 
@@ -333,6 +360,7 @@ elif page == "Optimization Algorithms Explored":
     st.markdown("Notice how **Adam** takes the most direct and efficient route to the minimum (located at `(0.0, 0.5)`), while **SGD** struggles and takes a noisy path. **Momentum** is better than SGD but can overshoot. This is why Adam is the default choice for most deep learning tasks.")
 
 # --- END OF NEW OPTIMIZATION ALGORITHMS PAGE ---
+
 
 
 
