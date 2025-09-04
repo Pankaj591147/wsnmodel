@@ -161,7 +161,7 @@ elif page == "Model Performance Comparison":
     fig_perf = px.bar(df_perf.sort_values('F1-Score', ascending=True), x='F1-Score', y='Model', orientation='h', title="Model F1-Scores", template='plotly_dark', text='F1-Score')
     st.plotly_chart(fig_perf, use_container_width=True)
     st.markdown("The results show that **XGBoost** and **Random Forest** are the top-performing classifiers.")
-    elif page == "Model Performance Comparison":
+
     st.title("📊 Model Performance Showdown")
     st.markdown("""
     This section provides a rigorous and transparent comparison of the five machine learning models. Each model was trained on 80% of the WSN-DS dataset and then evaluated on a held-out 20% test set to measure its real-world performance. The goal is to identify the most accurate, reliable, and effective classifier for this critical security task.
@@ -331,6 +331,7 @@ elif page == "Optimization Algorithms Explored":
     st.markdown("Notice how **Adam** takes the most direct and efficient route to the minimum (located at `(0.0, 0.5)`), while **SGD** struggles and takes a noisy path. **Momentum** is better than SGD but can overshoot. This is why Adam is the default choice for most deep learning tasks.")
 
 # --- END OF NEW OPTIMIZATION ALGORITHMS PAGE ---
+
 
 
 
