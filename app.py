@@ -62,45 +62,59 @@ models = {
 }
 # ----------------- DATA GENERATION FUNCTION (UNCHANGED) -----------------
 # ----------------- NEW: DATA GENERATION FUNCTION -----------------
-def generate_random_data(num_rows, attack_ratio=0.3):
-    """Generates a DataFrame of random WSN data with simulated attacks."""
+def generate_random_data(num_rows, attack_ratio=0.4):
+    """
+    Generates a DataFrame of more realistic WSN data with genuine, detectable attack patterns.
+    """
     data = {}
-    # Generate baseline "normal" data
+    
+    # Generate baseline "normal" data with plausible ranges
     for feature in expected_features:
         if feature in ['Time', 'who CH']:
-            data[feature] = np.random.randint(101000, 150000, size=num_rows)
+            data[feature] = np.random.randint(101000, 250000, size=num_rows)
         elif feature == 'Is_CH':
             data[feature] = np.random.choice([0, 1], size=num_rows, p=[0.9, 0.1])
-        elif feature in ['ADV_S', 'ADV_R', 'JOIN_S', 'JOIN_R', 'SCH_S', 'SCH_R', 'Rank', 'send_code']:
+        elif feature in ['ADV_S', 'ADV_R', 'JOIN_S', 'JOIN_R', 'SCH_S', 'SCH_R', 'Rank']:
             data[feature] = np.random.randint(0, 50, size=num_rows)
-        elif feature in ['DATA_S', 'DATA_R', 'Data_Sent_To_BS']:
-            data[feature] = np.random.randint(0, 1500, size=num_rows)
+        elif feature in ['DATA_S', 'DATA_R']:
+             data[feature] = np.random.randint(0, 150, size=num_rows)
+        elif feature == 'Data_Sent_To_BS':
+            # For normal traffic, data sent to BS should be similar to data sent by nodes
+            data[feature] = data['DATA_S'] * np.random.uniform(0.9, 1.0, size=num_rows)
         elif feature in ['Dist_To_CH', 'dist_CH_To_BS']:
-            data[feature] = np.random.uniform(0, 150, size=num_rows)
-        elif feature == 'Expaned Energy':
-            data[feature] = np.random.uniform(0.05, 0.2, size=num_rows)
-        else:
-            data[feature] = np.zeros(num_rows)
+            data[feature] = np.random.uniform(10, 150, size=num_rows)
+        else: # Handle any other columns like 'send_code', 'Expaned Energy'
+            data[feature] = np.random.uniform(0, 1, size=num_rows)
     
     df = pd.DataFrame(data)
 
-    # Inject attacks into a fraction of the data
+    # Inject simulated attacks with distinct patterns
     num_attacks = int(num_rows * attack_ratio)
     attack_indices = np.random.choice(df.index, num_attacks, replace=False)
 
     for i in attack_indices:
-        attack_type = np.random.choice(['Blackhole', 'Flooding'])
+        # Randomly choose between different, more realistic attack types
+        attack_type = np.random.choice(['Blackhole', 'Flooding', 'Scheduling'])
+        
         if attack_type == 'Blackhole':
-            # Simulate a blackhole: receives data but sends nothing to BS
-            df.loc[i, 'DATA_R'] = np.random.randint(1000, 2000)
-            df.loc[i, 'Data_Sent_To_BS'] = 0
+            # Simulate a blackhole: receives a normal amount of data but sends nothing to the Base Station.
+            # This is a key indicator.
+            df.loc[i, 'DATA_R'] = np.random.randint(100, 200)
+            df.loc[i, 'Data_Sent_To_BS'] = 0 # The crucial evidence of a blackhole
+        
         elif attack_type == 'Flooding':
-            # Simulate flooding: high traffic and energy use
-            df.loc[i, 'DATA_S'] = np.random.randint(2000, 4000)
-            df.loc[i, 'DATA_R'] = np.random.randint(2000, 4000)
-            df.loc[i, 'Expaned Energy'] = np.random.uniform(0.5, 1.0)
+            # Simulate flooding: very high traffic and energy use, but still sends data to BS.
+            df.loc[i, 'DATA_S'] = np.random.randint(2000, 5000)
+            df.loc[i, 'DATA_R'] = np.random.randint(2000, 5000)
+            df.loc[i, 'Data_Sent_To_BS'] = df.loc[i, 'DATA_S'] * np.random.uniform(0.8, 0.9) # Still forwards data
             
-    return df
+        elif attack_type == 'Scheduling':
+             # Simulate a scheduling attack: node sends very few schedule packets.
+             df.loc[i, 'SCH_S'] = np.random.randint(0, 5)
+             df.loc[i, 'SCH_R'] = np.random.randint(0, 5)
+
+    # Ensure the final dataframe has columns in the exact order the model expects
+    return df[expected_features]
 
 # ----------------- DASHBOARD DISPLAY FUNCTION (UNCHANGED) -----------------
 def display_dashboard(df, model, model_name):
@@ -389,6 +403,7 @@ elif page == "Optimization Algorithms Explored":
     st.markdown("Notice how **Adam** takes the most direct and efficient route to the minimum (located at `(0.0, 0.5)`), while **SGD** struggles and takes a noisy path. **Momentum** is better than SGD but can overshoot. This is why Adam is the default choice for most deep learning tasks.")
 
 # --- END OF NEW OPTIMIZATION ALGORITHMS PAGE ---
+
 
 
 
