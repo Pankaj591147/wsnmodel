@@ -131,6 +131,7 @@ page = st.sidebar.radio("Select a page", ["About the Project", "Model Performanc
 
 # --- ABOUT & MODEL COMPARISON PAGES (UNCHANGED) ---
 if page == "About the Project":
+    st.title("🛡️ About The WSN Intrusion Detection Project")
     st.markdown("This project presents a complete, end-to-end framework for identifying cyber attacks in Wireless Sensor Networks (WSNs). It addresses the critical need for intelligent security in resource-constrained IoT environments by leveraging a comparative machine learning approach to find the most effective and efficient defense mechanism.")
 
     st.graphviz_chart('''
@@ -388,6 +389,7 @@ elif page == "Optimization Algorithms Explored":
     st.markdown("Notice how **Adam** takes the most direct and efficient route to the minimum (located at `(0.0, 0.5)`), while **SGD** struggles and takes a noisy path. **Momentum** is better than SGD but can overshoot. This is why Adam is the default choice for most deep learning tasks.")
 
 # --- END OF NEW OPTIMIZATION ALGORITHMS PAGE ---
+
 
 
 
